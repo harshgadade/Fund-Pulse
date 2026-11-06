@@ -6,20 +6,38 @@ let clientInstance: Client | null = null;
 
 export function getDb(): Client {
   if (!clientInstance) {
-    const dataDir = path.join(process.cwd(), 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
+    const tursoUrl = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
+    const tursoAuthToken = process.env.TURSO_AUTH_TOKEN || process.env.DATABASE_AUTH_TOKEN;
+
+    if (tursoUrl) {
+      clientInstance = createClient({
+        url: tursoUrl,
+        authToken: tursoAuthToken,
+      });
+    } else {
+      const dataDir = path.join(process.cwd(), 'data');
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      const dbPath = path.join(dataDir, 'fund.db');
+      clientInstance = createClient({
+        url: `file:${dbPath}`,
+      });
     }
-    const dbPath = path.join(dataDir, 'fund.db');
-    clientInstance = createClient({
-      url: `file:${dbPath}`,
-    });
   }
   return clientInstance;
 }
 
 export async function initDb() {
   const db = getDb();
+
+  // Configure SQLite WAL mode & busy timeout for concurrent read/write support
+  try {
+    await db.execute('PRAGMA journal_mode = WAL;');
+    await db.execute('PRAGMA busy_timeout = 5000;');
+  } catch {
+    // Ignore PRAGMA failures if using remote HTTP/Turso where pragmas might differ
+  }
 
   // Create tables
   await db.execute(`

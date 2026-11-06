@@ -1,8 +1,12 @@
 const { createClient } = require('@libsql/client');
 const path = require('path');
 
-const dbPath = path.join(__dirname, '..', 'data', 'fund.db');
-const db = createClient({ url: `file:${dbPath}` });
+const tursoUrl = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
+const tursoAuthToken = process.env.TURSO_AUTH_TOKEN || process.env.DATABASE_AUTH_TOKEN;
+
+const db = tursoUrl
+  ? createClient({ url: tursoUrl, authToken: tursoAuthToken })
+  : createClient({ url: `file:${path.join(__dirname, '..', 'data', 'fund.db')}` });
 
 const members = [
   { name: 'Jyoti', shares: 4 },
