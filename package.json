@@ -6,7 +6,8 @@
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync-turso": "node scripts/sync-local-to-turso.js"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

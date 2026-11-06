@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings,
   Calendar,
@@ -13,6 +13,8 @@ import {
   AlertTriangle,
   RefreshCw,
   Info,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { FundCycle } from '@/lib/types';
 import { formatCurrency } from '@/lib/cycle-utils';
@@ -50,6 +52,31 @@ export default function SettingsTab({
   const [newInterestRate, setNewInterestRate] = useState(3.0);
   const [newNotes, setNewNotes] = useState('');
   const [isSubmittingCycle, setIsSubmittingCycle] = useState(false);
+
+  // Theme state
+  const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    setCurrentTheme(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    const handleThemeChange = () => {
+      setCurrentTheme(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    };
+    window.addEventListener('themechange', handleThemeChange);
+    return () => window.removeEventListener('themechange', handleThemeChange);
+  }, []);
+
+  const setAppTheme = (newTheme: 'light' | 'dark') => {
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('fundpulse_theme', 'dark');
+      setCurrentTheme('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('fundpulse_theme', 'light');
+      setCurrentTheme('light');
+    }
+    window.dispatchEvent(new Event('themechange'));
+  };
 
   // Backup / Restore
   const [isExporting, setIsExporting] = useState(false);
@@ -262,6 +289,45 @@ export default function SettingsTab({
           </div>
         </div>
         {importStatus && <p className="text-xs text-indigo-600 font-medium">{importStatus}</p>}
+      </div>
+
+      {/* Appearance / Theme Toggle */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+              {currentTheme === 'dark' ? <Moon className="w-4 h-4 text-indigo-400" /> : <Sun className="w-4 h-4 text-amber-500" />}
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-slate-900">Theme Appearance</h3>
+              <p className="text-xs text-slate-500">Switch between light and dark visual themes</p>
+            </div>
+          </div>
+          <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200">
+            <button
+              onClick={() => setAppTheme('light')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                currentTheme === 'light'
+                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Sun className="w-3.5 h-3.5 text-amber-500" />
+              Light
+            </button>
+            <button
+              onClick={() => setAppTheme('dark')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                currentTheme === 'dark'
+                  ? 'bg-slate-800 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Moon className="w-3.5 h-3.5 text-indigo-400" />
+              Dark
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Demo Seed Reset */}

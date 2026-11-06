@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Wallet,
   Calendar,
@@ -12,6 +12,8 @@ import {
   Sparkles,
   Printer,
   PlusCircle,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { FundCycle } from '@/lib/types';
 
@@ -38,6 +40,34 @@ export default function Navbar({
   onSeedDemo,
   isSeeding,
 }: NavbarProps) {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    setTheme(isDark ? 'dark' : 'light');
+
+    const handleThemeChange = () => {
+      setTheme(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    };
+
+    window.addEventListener('themechange', handleThemeChange);
+    return () => window.removeEventListener('themechange', handleThemeChange);
+  }, []);
+
+  const toggleTheme = () => {
+    const isDark = document.documentElement.classList.contains('dark');
+    if (isDark) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('fundpulse_theme', 'light');
+      setTheme('light');
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('fundpulse_theme', 'dark');
+      setTheme('dark');
+    }
+    window.dispatchEvent(new Event('themechange'));
+  };
+
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: Wallet },
     { id: 'matrix', label: '12-Month Matrix', icon: Calendar },
@@ -103,6 +133,20 @@ export default function Navbar({
             >
               <Printer className="w-3.5 h-3.5 text-slate-600" />
               <span className="hidden sm:inline">Print</span>
+            </button>
+
+            {/* Dark / Light Mode Toggle */}
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="flex items-center justify-center p-1.5 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-600" />
+              )}
             </button>
 
             <button
